@@ -1,3 +1,4 @@
+import { hasAvailableMoves } from './MoveCalculator'
 import type { GameState, Tile } from './types'
 
 function createTile(id: string, value: number, row: number, col: number): Tile {
@@ -8,7 +9,7 @@ function randomValue(): number {
   return Math.floor(Math.random() * 9) + 1
 }
 
-export function createInitialBoard(gridSize: number): GameState {
+function buildBoard(gridSize: number): GameState {
   const tiles: Tile[] = []
 
   for (let row = 0; row < gridSize; row += 1) {
@@ -27,6 +28,18 @@ export function createInitialBoard(gridSize: number): GameState {
     status: 'playing',
     difficulty: gridSize - 3,
   }
+}
+
+export function createInitialBoard(gridSize: number): GameState {
+  let board = buildBoard(gridSize)
+  let attempts = 0
+
+  while (!hasAvailableMoves(board) && attempts < 100) {
+    board = buildBoard(gridSize)
+    attempts += 1
+  }
+
+  return board
 }
 
 export function createNewGame(gridSize = 4): GameState {

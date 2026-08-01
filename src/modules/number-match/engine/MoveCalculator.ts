@@ -1,8 +1,46 @@
+import { addLines } from './AddLinesEngine'
 import { canMatchTiles } from './MatchValidator'
-import type { GameState, Tile } from './types'
+import { calculateMatchScore } from './ScoreCalculator'
+import type { GameState, GameStatus, Tile } from './types'
 
 export function findTile(state: GameState, tileId: string): Tile | undefined {
   return state.tiles.find(tile => tile.id === tileId && !tile.removed)
+}
+
+export function hasAvailableMoves(state: GameState): boolean {
+  const active = state.tiles.filter(tile => !tile.removed)
+
+  for (let i = 0; i < active.length; i += 1) {
+    for (let j = i + 1; j < active.length; j += 1) {
+      if (canMatchTiles(state, active[i]!, active[j]!)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+export function canAddLines(state: GameState): boolean {
+  return state.tiles.some(tile => tile.removed)
+}
+
+export function evaluateGameStatus(state: GameState): GameStatus {
+  const activeCount = state.tiles.filter(tile => !tile.removed).length
+
+  if (activeCount === 0) {
+    return 'won'
+  }
+
+  if (hasAvailableMoves(state)) {
+    return 'playing'
+  }
+
+  if (canAddLines(state)) {
+    return 'playing'
+  }
+
+  return 'lost'
 }
 
 export function applyTileSelection(state: GameState, tileId: string): GameState {
@@ -30,23 +68,30 @@ export function applyTileSelection(state: GameState, tileId: string): GameState 
       return { ...state, selectedTileIds: [tileId] }
     }
 
-    if (canMatchTiles(firstTile, tile)) {
+    if (canMatchTiles(state, firstTile, tile)) {
       const tiles = state.tiles.map(current =>
         current.id === firstTile.id || current.id === tile.id
           ? { ...current, removed: true }
           : current,
       )
 
-      const activeTiles = tiles.filter(current => !current.removed)
-      const status = activeTiles.length === 0 ? 'won' : state.status
+      const moves = state.moves + 1
+      const comboCount = moves
+      const score =
+        state.score + calculateMatchScore(firstTile, tile, comboCount)
 
-      return {
+      const nextState: GameState = {
         ...state,
         tiles,
         selectedTileIds: [],
-        moves: state.moves + 1,
-        score: state.score + calculateMoveScore(firstTile, tile),
-        status,
+        moves,
+        score,
+        status: 'playing',
+      }
+
+      return {
+        ...nextState,
+        status: evaluateGameStatus(nextState),
       }
     }
 
@@ -56,20 +101,14 @@ export function applyTileSelection(state: GameState, tileId: string): GameState 
   return { ...state, selectedTileIds: [tileId] }
 }
 
-function calculateMoveScore(tileA: Tile, tileB: Tile): number {
-  return tileA.value === tileB.value ? tileA.value * 2 : 10
-}
-
-export function hasAvailableMoves(state: GameState): boolean {
-  const active = state.tiles.filter(tile => !tile.removed)
-
-  for (let i = 0; i < active.length; i += 1) {
-    for (let j = i + 1; j < active.length; j += 1) {
-      if (canMatchTiles(active[i]!, active[j]!)) {
-        return true
-      }
-    }
+export function applyAddLines(state: GameState): GameState {
+  const next = addLines(state)
+  if (!next) {
+    return state
   }
 
-  return false
+  return {
+    ...next,
+    status: evaluateGameStatus(next),
+  }
 }

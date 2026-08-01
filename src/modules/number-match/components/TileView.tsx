@@ -8,6 +8,7 @@ type TileViewProps = {
   size: number
   theme: AppTheme
   selected: boolean
+  hinted: boolean
   onPress: (tileId: string) => void
 }
 
@@ -16,27 +17,49 @@ export function TileView({
   size,
   theme,
   selected,
+  hinted,
   onPress,
 }: TileViewProps) {
   if (tile.removed) {
-    return <View style={{ width: size, height: size }} />
+    return (
+      <View
+        style={[
+          styles.emptyCell,
+          {
+            width: size,
+            height: size,
+            borderColor: theme.border,
+          },
+        ]}
+      />
+    )
   }
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ selected }}
       onPress={() => onPress(tile.id)}
       style={({ pressed }) => [
         styles.tile,
         {
           width: size,
           height: size,
-          backgroundColor: selected ? theme.tileSelected : theme.tile,
-          borderColor: theme.border,
+          backgroundColor: selected
+            ? theme.tileSelected
+            : hinted
+              ? theme.tile
+              : theme.tile,
+          borderColor: hinted ? '#F59E0B' : selected ? '#4F46E5' : theme.border,
+          borderWidth: selected || hinted ? 2 : 1,
         },
         pressed && styles.pressed,
       ]}>
-      <Text style={[styles.value, { fontSize: getTileFontSize(size), color: theme.text }]}>
+      <Text
+        style={[
+          styles.value,
+          { fontSize: getTileFontSize(size), color: theme.text },
+        ]}>
         {tile.value}
       </Text>
     </Pressable>
@@ -47,8 +70,13 @@ const styles = StyleSheet.create({
   tile: {
     alignItems: 'center',
     borderRadius: 12,
-    borderWidth: 1,
     justifyContent: 'center',
+  },
+  emptyCell: {
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    opacity: 0.35,
   },
   value: {
     fontWeight: '800',

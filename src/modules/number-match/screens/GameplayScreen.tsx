@@ -1,15 +1,21 @@
 import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { Board } from '@modules/number-match/components/Board'
+import { GamePopup } from '@modules/number-match/components/GamePopup'
 import { PrimaryButton } from '@modules/number-match/components/PrimaryButton'
 import { CoinBadge } from '@modules/number-match/components/ScreenHeader'
-import { addLines } from '@modules/number-match/engine/AddLinesEngine'
 import { createNewGame } from '@modules/number-match/engine/BoardGenerator'
 import { findHintPair } from '@modules/number-match/engine/HintEngine'
-import { applyTileSelection, hasAvailableMoves } from '@modules/number-match/engine/MoveCalculator'
+import {
+  applyAddLines,
+  applyTileSelection,
+  canAddLines,
+  evaluateGameStatus,
+  hasAvailableMoves,
+} from '@modules/number-match/engine/MoveCalculator'
 import { calculateVictoryCoins } from '@modules/number-match/engine/ScoreCalculator'
 import { shuffleActiveTiles } from '@modules/number-match/engine/ShuffleEngine'
 import type { GameState } from '@modules/number-match/engine/types'
@@ -33,18 +39,24 @@ export function GameplayScreen({ navigation, route }: Props) {
   const recordWin = useStatsStore(state => state.recordWin)
   const recordGamePlayed = useStatsStore(state => state.recordGamePlayed)
   const recordHint = useStatsStore(state => state.recordHint)
-  const [showVictory, setShowVictory] = useState(false)
   const [history, setHistory] = useState<GameState[]>([])
+  const [hintedTileIds, setHintedTileIds] = useState<string[]>([])
+  const rewardedRef = useRef<string | null>(null)
 
   const resetHistory = useCallback(() => {
     setHistory([])
+    setHintedTileIds([])
+    rewardedRef.current = null
   }, [])
 
   const maybeSpend = useCallback(
     (cost: number) => {
       if (coins >= cost) {
         spendCoins(cost)
+        return true
       }
+
+      return false
     },
     [coins, spendCoins],
   )
@@ -55,37 +67,50 @@ export function GameplayScreen({ navigation, route }: Props) {
         setHistory(current => [...current.slice(-19), game])
       }
       setGame(next)
+      setHintedTileIds([])
     },
     [game, setGame],
+  )
+
+  const startNewRound = useCallback(
+    (gridSize = 4) => {
+      resetHistory()
+      setGame(createNewGame(gridSize))
+      setStatus('playing')
+    },
+    [resetHistory, setGame, setStatus],
   )
 
   useFocusEffect(
     useCallback(() => {
       if (route.params?.newGame) {
         recordGamePlayed()
-        resetHistory()
-        setGame(createNewGame(4))
-        setShowVictory(false)
+        startNewRound(4)
         navigation.setParams({ newGame: undefined })
         return
       }
 
       if (!useGameStore.getState().game) {
         recordGamePlayed()
-        resetHistory()
-        setGame(createNewGame(4))
-        setShowVictory(false)
+        startNewRound(4)
       }
-    }, [navigation, recordGamePlayed, resetHistory, route.params?.newGame, setGame]),
+    }, [navigation, recordGamePlayed, route.params?.newGame, startNewRound]),
   )
 
   useEffect(() => {
-    if (game?.status === 'won') {
-      setShowVictory(true)
-      setStatus('won')
-      recordWin(game.score)
-      addCoins(awardBoardCoins() + calculateVictoryCoins(game.gridSize, game.moves))
+    if (!game || game.status !== 'won') {
+      return
     }
+
+    const rewardKey = `${game.score}-${game.moves}-${game.gridSize}`
+    if (rewardedRef.current === rewardKey) {
+      return
+    }
+
+    rewardedRef.current = rewardKey
+    recordWin(game.score)
+    addCoins(awardBoardCoins() + calculateVictoryCoins(game.gridSize, game.moves))
+    setStatus('won')
   }, [addCoins, game, recordWin, setStatus])
 
   const handleTilePress = useCallback(
@@ -109,13 +134,13 @@ export function GameplayScreen({ navigation, route }: Props) {
     }
 
     const previous = history[history.length - 1]
-    if (!previous) {
+    if (!previous || !maybeSpend(COIN_COSTS.undo)) {
       return
     }
 
-    maybeSpend(COIN_COSTS.undo)
     setHistory(current => current.slice(0, -1))
     setGame({ ...previous, selectedTileIds: [] })
+    setHintedTileIds([])
   }, [game, history, maybeSpend, setGame])
 
   const handleHint = useCallback(() => {
@@ -124,12 +149,12 @@ export function GameplayScreen({ navigation, route }: Props) {
     }
 
     const pair = findHintPair(game)
-    if (!pair) {
+    if (!pair || !maybeSpend(COIN_COSTS.hint)) {
       return
     }
 
-    maybeSpend(COIN_COSTS.hint)
     recordHint()
+    setHintedTileIds([pair.tileAId, pair.tileBId])
     setGame({ ...game, selectedTileIds: [pair.tileAId, pair.tileBId] })
   }, [game, maybeSpend, recordHint, setGame])
 
@@ -139,12 +164,15 @@ export function GameplayScreen({ navigation, route }: Props) {
     }
 
     const activeCount = game.tiles.filter(tile => !tile.removed).length
-    if (activeCount < 2) {
+    if (activeCount < 2 || !maybeSpend(COIN_COSTS.shuffle)) {
       return
     }
 
-    maybeSpend(COIN_COSTS.shuffle)
-    commitGame(shuffleActiveTiles(game))
+    const shuffled = shuffleActiveTiles(game)
+    commitGame({
+      ...shuffled,
+      status: evaluateGameStatus(shuffled),
+    })
   }, [commitGame, game, maybeSpend])
 
   const handleAddLines = useCallback(() => {
@@ -152,25 +180,25 @@ export function GameplayScreen({ navigation, route }: Props) {
       return
     }
 
-    const next = addLines(game)
-    if (!next) {
+    if (!canAddLines(game) || !maybeSpend(COIN_COSTS.addLines)) {
       return
     }
 
-    maybeSpend(COIN_COSTS.addLines)
-    commitGame(next)
+    commitGame(applyAddLines(game))
   }, [commitGame, game, maybeSpend])
 
-  const canUndo = history.length > 0
-  const canHint = game ? findHintPair(game) !== null : false
+  const canUndo = history.length > 0 && coins >= COIN_COSTS.undo
+  const canHint = game ? findHintPair(game) !== null && coins >= COIN_COSTS.hint : false
   const activeTileCount = game?.tiles.filter(tile => !tile.removed).length ?? 0
-  const canShuffle = activeTileCount >= 2
-  const canAddLines = (game?.tiles.some(tile => tile.removed) ?? false)
+  const canShuffle =
+    activeTileCount >= 2 && coins >= COIN_COSTS.shuffle
+  const canRestoreLines = game ? canAddLines(game) && coins >= COIN_COSTS.addLines : false
   const isStuck = game ? !hasAvailableMoves(game) : false
 
   if (!game) {
     return (
-      <SafeAreaView style={[styles.container, styles.loading, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.container, styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator color={theme.tileSelected} size="large" />
       </SafeAreaView>
     )
@@ -180,12 +208,8 @@ export function GameplayScreen({ navigation, route }: Props) {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <CoinBadge coins={coins} />
-        <Text style={[styles.meta, { color: theme.text }]}>
-          Moves {game.moves}
-        </Text>
-        <Text style={[styles.meta, { color: theme.text }]}>
-          Score {game.score}
-        </Text>
+        <Text style={[styles.meta, { color: theme.text }]}>Moves {game.moves}</Text>
+        <Text style={[styles.meta, { color: theme.text }]}>Score {game.score}</Text>
         <PrimaryButton
           label="Pause"
           onPress={() => navigation.navigate(AppRoutes.HOME)}
@@ -195,8 +219,19 @@ export function GameplayScreen({ navigation, route }: Props) {
         />
       </View>
 
+      {isStuck && game.status === 'playing' ? (
+        <Text style={[styles.stuckBanner, { color: theme.muted }]}>
+          No matches left — add a line or shuffle to continue.
+        </Text>
+      ) : null}
+
       <View style={styles.boardWrap}>
-        <Board game={game} onTilePress={handleTilePress} theme={theme} />
+        <Board
+          game={game}
+          hintedTileIds={hintedTileIds}
+          onTilePress={handleTilePress}
+          theme={theme}
+        />
       </View>
 
       <View style={styles.footer}>
@@ -222,7 +257,7 @@ export function GameplayScreen({ navigation, route }: Props) {
           variant="secondary"
         />
         <PrimaryButton
-          disabled={!canAddLines}
+          disabled={!canRestoreLines}
           label={isStuck ? 'Add Lines!' : 'Add Lines'}
           onPress={handleAddLines}
           theme={theme}
@@ -230,31 +265,28 @@ export function GameplayScreen({ navigation, route }: Props) {
         />
       </View>
 
-      {showVictory ? (
-        <View style={styles.overlay}>
-          <View style={[styles.modal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Victory!</Text>
-            <Text style={[styles.modalBody, { color: theme.muted }]}>
-              Score {game.score}
-            </Text>
-            <PrimaryButton
-              label="Play Again"
-              onPress={() => {
-                setShowVictory(false)
-                resetHistory()
-                setGame(createNewGame(game.gridSize))
-              }}
-              theme={theme}
-            />
-            <PrimaryButton
-              label="Home"
-              onPress={() => navigation.navigate(AppRoutes.HOME)}
-              style={styles.modalSecondary}
-              theme={theme}
-              variant="secondary"
-            />
-          </View>
-        </View>
+      {game.status === 'won' ? (
+        <GamePopup
+          body={`You cleared the board in ${game.moves} moves.\nFinal score: ${game.score}`}
+          onPrimaryPress={() => startNewRound(game.gridSize)}
+          onSecondaryPress={() => navigation.navigate(AppRoutes.HOME)}
+          primaryLabel="Play Again"
+          secondaryLabel="Home"
+          theme={theme}
+          title="Victory!"
+        />
+      ) : null}
+
+      {game.status === 'lost' ? (
+        <GamePopup
+          body={`No valid moves remain.\nFinal score: ${game.score}`}
+          onPrimaryPress={() => startNewRound(game.gridSize)}
+          onSecondaryPress={() => navigation.navigate(AppRoutes.HOME)}
+          primaryLabel="Restart"
+          secondaryLabel="Home"
+          theme={theme}
+          title="Game Over"
+        />
       ) : null}
     </SafeAreaView>
   )
@@ -280,6 +312,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
+  stuckBanner: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
   pauseButton: {
     minHeight: 40,
     paddingHorizontal: 12,
@@ -293,31 +331,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     paddingBottom: 12,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  modal: {
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 12,
-    padding: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  modalBody: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  modalSecondary: {
-    marginTop: 4,
   },
 })

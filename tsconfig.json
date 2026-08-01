@@ -1,0 +1,19 @@
+{
+  "extends": "@react-native/typescript-config",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "strict": true,
+    "incremental": true,
+    "baseUrl": "./",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@components/*": ["src/global/components/*"],
+      "@global/*": ["src/global/*"],
+      "@infra/*": ["src/infra/*"],
+      "@modules/*": ["src/modules/*"],
+      "@router/*": ["src/router/*"],
+      "@store/*": ["src/store/*"]
+    }
+  },
+  "exclude": ["**/node_modules", "**/Pods", "android", "ios"]
+}

@@ -1,11 +1,34 @@
 import type { GameState, Tile } from './types'
 
+/**
+ * Row/col index per board, built once and reused.
+ *
+ * Keyed on the state object, which the engine always replaces rather than
+ * mutates, so an entry can never go stale. A WeakMap lets superseded boards be
+ * collected with their index.
+ */
+const cellIndex = new WeakMap<GameState, Map<number, Tile>>()
+
+function getCellIndex(state: GameState): Map<number, Tile> {
+  const cached = cellIndex.get(state)
+  if (cached) {
+    return cached
+  }
+
+  const index = new Map<number, Tile>()
+  for (const tile of state.tiles) {
+    index.set(tile.row * state.gridSize + tile.col, tile)
+  }
+  cellIndex.set(state, index)
+  return index
+}
+
 export function getTileAt(
   state: GameState,
   row: number,
   col: number,
 ): Tile | undefined {
-  return state.tiles.find(tile => tile.row === row && tile.col === col)
+  return getCellIndex(state).get(row * state.gridSize + col)
 }
 
 function areGridAdjacent(tileA: Tile, tileB: Tile): boolean {

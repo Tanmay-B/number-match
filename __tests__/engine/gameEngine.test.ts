@@ -5,7 +5,11 @@ import {
   evaluateGameStatus,
   hasAvailableMoves,
 } from '@modules/number-match/engine/MoveCalculator'
-import { canConnectTiles } from '@modules/number-match/engine/PathValidator'
+import { findHintPair } from '@modules/number-match/engine/HintEngine'
+import {
+  canConnectTiles,
+  getTileAt,
+} from '@modules/number-match/engine/PathValidator'
 import type { GameState, Tile } from '@modules/number-match/engine/types'
 
 function tile(
@@ -112,5 +116,51 @@ describe('MoveCalculator', () => {
     ])
 
     expect(canMatchTiles(state, state.tiles[0]!, state.tiles[1]!)).toBe(false)
+  })
+})
+
+describe('board scan caching', () => {
+  // hasAvailableMoves and findHintPair memoise on the state object. These lock
+  // in that a derived board is never answered from its parent's entry.
+  it('re-answers after a match clears the last pair', () => {
+    const before = buildState([
+      tile('0-0', 4, 0, 0),
+      tile('0-1', 6, 0, 1),
+    ])
+
+    expect(hasAvailableMoves(before)).toBe(true)
+    expect(findHintPair(before)).toEqual({ tileAId: '0-0', tileBId: '0-1' })
+
+    const after = applyTileSelection(
+      applyTileSelection(before, '0-0'),
+      '0-1',
+    )
+
+    expect(after).not.toBe(before)
+    expect(hasAvailableMoves(after)).toBe(false)
+    expect(findHintPair(after)).toBeNull()
+    // The parent's answers must be untouched by the child's.
+    expect(hasAvailableMoves(before)).toBe(true)
+  })
+
+  it('answers two boards that share tile objects independently', () => {
+    const tiles = [tile('0-0', 4, 0, 0), tile('0-1', 6, 0, 1)]
+    const withMove = buildState(tiles)
+    const finished: GameState = { ...withMove, status: 'won' }
+
+    expect(hasAvailableMoves(withMove)).toBe(true)
+    expect(hasAvailableMoves(finished)).toBe(true)
+    expect(findHintPair(finished)).toEqual({ tileAId: '0-0', tileBId: '0-1' })
+  })
+
+  it('indexes cells correctly on a non-square-indexed board', () => {
+    const state = buildState(
+      [tile('1-2', 7, 1, 2), tile('2-1', 3, 2, 1)],
+      4,
+    )
+
+    expect(getTileAt(state, 1, 2)?.id).toBe('1-2')
+    expect(getTileAt(state, 2, 1)?.id).toBe('2-1')
+    expect(getTileAt(state, 0, 0)).toBeUndefined()
   })
 })

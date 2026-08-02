@@ -7,18 +7,35 @@ export function findTile(state: GameState, tileId: string): Tile | undefined {
   return state.tiles.find(tile => tile.id === tileId && !tile.removed)
 }
 
-export function hasAvailableMoves(state: GameState): boolean {
-  const active = state.tiles.filter(tile => !tile.removed)
+/**
+ * Cache of the full-board scan, keyed on the state object.
+ *
+ * A render asks this question several times over — for the stuck banner, for
+ * evaluateGameStatus, and again for a couple of the power-ups — and the answer
+ * cannot change without the engine producing a new state object.
+ */
+const availableMoves = new WeakMap<GameState, boolean>()
 
-  for (let i = 0; i < active.length; i += 1) {
+export function hasAvailableMoves(state: GameState): boolean {
+  const cached = availableMoves.get(state)
+  if (cached !== undefined) {
+    return cached
+  }
+
+  const active = state.tiles.filter(tile => !tile.removed)
+  let result = false
+
+  outer: for (let i = 0; i < active.length; i += 1) {
     for (let j = i + 1; j < active.length; j += 1) {
       if (canMatchTiles(state, active[i]!, active[j]!)) {
-        return true
+        result = true
+        break outer
       }
     }
   }
 
-  return false
+  availableMoves.set(state, result)
+  return result
 }
 
 export function canAddLines(state: GameState): boolean {

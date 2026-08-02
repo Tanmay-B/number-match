@@ -13,10 +13,17 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import type { AppTheme } from '@modules/number-match/constants/palette'
-import { RADIUS, elevation } from '@modules/number-match/constants/tokens'
+import { RADIUS } from '@modules/number-match/constants/tokens'
 import type { Tile } from '@modules/number-match/engine/types'
 
 const SPRING = { damping: 14, stiffness: 220, mass: 0.6 }
+
+/*
+ * Tiles are deliberately flat — no shadow on the view and none on the numeral.
+ * The design draws them as flat fills, and a blurred shadow on every tile costs
+ * an offscreen pass per tile per frame while the board animates. Selection is
+ * carried by the border, the lift and the scale instead.
+ */
 
 /**
  * Clear timings. The pop and the fade run back to back and finish together, so
@@ -173,14 +180,12 @@ function TileViewBase({
         onPress={() => onPress(tile.id)}
         style={[
           styles.tile,
-          elevation(selected ? 3 : 1),
           {
             width: size,
             height: size,
             backgroundColor: tileColor,
             borderColor: outline,
             borderWidth: selected || hinted ? 3 : 0,
-            shadowColor: selected ? tileColor : '#000000',
           },
         ]}>
         <Text style={[styles.value, { fontSize, color: inkColor }]}>
@@ -222,8 +227,5 @@ const styles = StyleSheet.create({
   },
   value: {
     fontWeight: '600',
-    textShadowColor: 'rgba(0,0,0,0.25)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 })

@@ -74,8 +74,12 @@ export function GameHud({
     transform: [{ scale: scorePop.value }],
   }))
 
+  // Scale rather than width: animating a percentage width re-runs layout on
+  // every frame, which lands on the same frames as the tile clear animation.
   const barStyle = useAnimatedStyle(() => ({
-    width: `${Math.min(100, Math.max(0, progressWidth.value * 100))}%`,
+    transform: [
+      { scaleX: Math.min(1, Math.max(0, progressWidth.value)) },
+    ],
   }))
 
   return (
@@ -195,6 +199,8 @@ const styles = StyleSheet.create({
   fill: {
     borderRadius: RADIUS.pill,
     height: '100%',
+    transformOrigin: 'left',
+    width: '100%',
   },
   pressed: {
     opacity: 0.85,

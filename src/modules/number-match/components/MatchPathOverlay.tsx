@@ -155,17 +155,13 @@ export function MatchPathOverlay({
 
   const containerStyle = useAnimatedStyle(() => ({ opacity: opacity.value }))
 
-  if (!match) {
-    return null
-  }
-
-  const segments = buildMatchSegments(
-    match.a,
-    match.b,
-    gridSize,
-    tileSize,
-    boardSize,
-  )
+  // The Svg host stays mounted for the whole game rather than appearing with
+  // each match: creating a native view on the same frame the matched tiles
+  // start animating is exactly when there is no budget for it. Opacity is 0
+  // while idle, so nothing is drawn.
+  const segments = match
+    ? buildMatchSegments(match.a, match.b, gridSize, tileSize, boardSize)
+    : []
   const strokeWidth = Math.max(4, Math.round(tileSize * 0.09))
   const endpointRadius = strokeWidth * 0.9
 
@@ -184,7 +180,7 @@ export function MatchPathOverlay({
             strokeWidth={strokeWidth}
           />
         ))}
-        {[match.a, match.b].map(cell => {
+        {(match ? [match.a, match.b] : []).map(cell => {
           const center = getCellCenter(cell.row, cell.col, tileSize)
           return (
             <Circle

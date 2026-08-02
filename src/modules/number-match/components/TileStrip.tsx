@@ -33,13 +33,13 @@ const styles = StyleSheet.create({
   },
   tile: {
     alignItems: 'center',
-    borderRadius: RADIUS.xs,
+    borderRadius: RADIUS.sm,
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.md + 2,
   },
   value: {
     ...TYPE.label,
-    fontSize: 13,
+    fontSize: 17,
   },
 })

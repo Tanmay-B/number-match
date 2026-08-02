@@ -61,7 +61,7 @@ export function BottomNav({ theme, active, onNavigate }: BottomNavProps) {
             <Icon
               color={isActive ? theme.accent.bg : theme.muted}
               name={tab.icon}
-              size={20}
+              size={23}
             />
           </Pressable>
         )
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: SPACING.sm + 2,
+    paddingVertical: SPACING.md + 2,
   },
   tab: {
     alignItems: 'center',

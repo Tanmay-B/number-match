@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   wordLarge: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 42,
+    lineHeight: 50,
   },
   wordMedium: {
     fontSize: 26,

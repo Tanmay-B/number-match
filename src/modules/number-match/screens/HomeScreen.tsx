@@ -57,7 +57,7 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.warm.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.warm.ink} name="flame" size={16} />
+              <Icon color={theme.warm.ink} name="flame" size={19} />
             </Pressable>
             <Pressable
               accessibilityLabel="Settings"
@@ -68,16 +68,18 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.support.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.support.ink} name="settings" size={16} />
+              <Icon color={theme.support.ink} name="settings" size={19} />
             </Pressable>
           </View>
         </View>
 
-        <View style={styles.logoWrap}>
+        {/*
+          The hero absorbs whatever vertical space is left over, so the page
+          fills the viewport on a tall phone instead of stacking against the
+          top edge, and still scrolls if a short one runs out of room.
+        */}
+        <View style={styles.hero}>
           <GameLogo theme={theme} />
-        </View>
-
-        <View style={styles.stripWrap}>
           <TileStrip theme={theme} />
         </View>
 
@@ -85,7 +87,8 @@ export function HomeScreen({ navigation }: Props) {
           <PrimaryButton
             label={`Continue · level ${level}`}
             onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
-            style={styles.continueButton}
+            size="hero"
+            style={styles.action}
             theme={theme}
             variant="primary"
           />
@@ -96,7 +99,8 @@ export function HomeScreen({ navigation }: Props) {
           onPress={() =>
             navigation.navigate(AppRoutes.GAMEPLAY, { newGame: true })
           }
-          style={styles.newGameButton}
+          size="hero"
+          style={styles.action}
           theme={theme}
           variant={canResume ? 'secondary' : 'primary'}
         />
@@ -149,19 +153,20 @@ export function HomeScreen({ navigation }: Props) {
   )
 }
 
-// Vertical rhythm is taken straight from the design rather than a uniform gap.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   content: {
+    // flexGrow lets the hero stretch on tall screens while still allowing the
+    // page to scroll on short ones.
+    flexGrow: 1,
     padding: 18,
   },
   topRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   topActions: {
     flexDirection: 'row',
@@ -170,32 +175,30 @@ const styles = StyleSheet.create({
   circleButton: {
     alignItems: 'center',
     borderRadius: RADIUS.pill,
-    height: 32,
+    height: 38,
     justifyContent: 'center',
-    width: 32,
+    width: 38,
   },
-  logoWrap: {
-    alignItems: 'center',
-    marginBottom: 20,
+  hero: {
+    alignItems: 'stretch',
+    flex: 1,
+    gap: 28,
+    justifyContent: 'center',
+    minHeight: 180,
+    paddingVertical: 24,
   },
-  stripWrap: {
-    marginBottom: 16,
-  },
-  continueButton: {
-    marginBottom: 10,
-  },
-  newGameButton: {
-    marginBottom: 16,
+  action: {
+    marginBottom: 12,
   },
   chipRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   navWrap: {
     paddingBottom: 10,
     paddingHorizontal: 18,
-    paddingTop: 8,
+    paddingTop: 10,
   },
   pressed: {
     opacity: 0.8,

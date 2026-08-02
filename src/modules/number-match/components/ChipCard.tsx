@@ -37,7 +37,7 @@ export function ChipCard({
         pressed && !disabled && styles.pressed,
         style,
       ]}>
-      <Icon color={role.ink} name={icon} size={18} />
+      <Icon color={role.ink} name={icon} size={22} />
       <Text style={[styles.label, { color: role.ink }]}>{label}</Text>
     </Pressable>
   )
@@ -75,7 +75,7 @@ export function ChipRow({
         pressed && !disabled && styles.pressed,
       ]}>
       <View style={styles.rowLeft}>
-        <Icon color={role.ink} name={icon} size={15} />
+        <Icon color={role.ink} name={icon} size={17} />
         <Text style={[styles.rowLabel, { color: role.ink }]}>{label}</Text>
       </View>
       {meta ? (
@@ -90,12 +90,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: RADIUS.md,
     flex: 1,
-    gap: SPACING.xs,
+    gap: SPACING.sm - 2,
     paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.lg + 2,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.sm,
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md + 2,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
   },
   rowLeft: {
     alignItems: 'center',
@@ -115,11 +115,11 @@ const styles = StyleSheet.create({
     gap: SPACING.xs + 2,
   },
   rowLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
   },
   rowMeta: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '400',
   },
   disabled: {

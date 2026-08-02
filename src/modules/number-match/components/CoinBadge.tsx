@@ -43,7 +43,7 @@ export function CoinBadge({
     transform: [{ scale: valueScale.value }],
   }))
 
-  const iconSize = compact ? 15 : 17
+  const iconSize = compact ? 15 : 18
 
   return (
     <View
@@ -82,9 +82,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: RADIUS.lg,
     flexDirection: 'row',
-    gap: SPACING.xs + 2,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm - 2,
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.md + 2,
+    paddingVertical: SPACING.sm + 1,
   },
   compact: {
     gap: SPACING.xs,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xs + 1,
   },
   value: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
   },
   compactValue: {

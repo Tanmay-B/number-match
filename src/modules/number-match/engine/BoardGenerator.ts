@@ -1,3 +1,4 @@
+import { MIN_GRID, getDifficultyForGridSize } from './DifficultyManager'
 import { hasAvailableMoves } from './MoveCalculator'
 import type { GameState, Tile } from './types'
 
@@ -26,7 +27,7 @@ function buildBoard(gridSize: number): GameState {
     moves: 0,
     selectedTileIds: [],
     status: 'playing',
-    difficulty: gridSize - 3,
+    difficulty: getDifficultyForGridSize(gridSize),
   }
 }
 
@@ -42,6 +43,6 @@ export function createInitialBoard(gridSize: number): GameState {
   return board
 }
 
-export function createNewGame(gridSize = 4): GameState {
+export function createNewGame(gridSize = MIN_GRID): GameState {
   return createInitialBoard(gridSize)
 }

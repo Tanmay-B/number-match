@@ -23,6 +23,8 @@ type GameHudProps = {
   score: number
   best: number
   moves: number
+  /** Current board size, e.g. "5×5". */
+  gridLabel: string
   tilesRemaining: number
   totalTiles: number
   onPause: () => void
@@ -39,6 +41,7 @@ export function GameHud({
   score,
   best,
   moves,
+  gridLabel,
   tilesRemaining,
   totalTiles,
   onPause,
@@ -111,6 +114,8 @@ export function GameHud({
       </View>
 
       <View style={styles.metaRow}>
+        <Text style={[styles.meta, { color: theme.muted }]}>{gridLabel}</Text>
+        <Text style={[styles.metaDot, { color: theme.muted }]}>·</Text>
         <Text style={[styles.meta, { color: theme.muted }]}>
           BEST {best.toLocaleString()}
         </Text>

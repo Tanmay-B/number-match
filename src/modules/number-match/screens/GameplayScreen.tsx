@@ -29,6 +29,11 @@ import {
   needsCoinTopUp,
   type PowerUpId,
 } from '@modules/number-match/engine/PowerUpAvailability'
+import {
+  getBoardsUntilNextStep,
+  getGridLabel,
+  getGridSizeForBoardsCompleted,
+} from '@modules/number-match/engine/DifficultyManager'
 import { calculateVictoryCoins } from '@modules/number-match/engine/ScoreCalculator'
 import { shuffleActiveTiles } from '@modules/number-match/engine/ShuffleEngine'
 import type { GameState } from '@modules/number-match/engine/types'
@@ -63,6 +68,7 @@ export function GameplayScreen({ navigation, route }: Props) {
   const recordGamePlayed = useStatsStore(state => state.recordGamePlayed)
   const recordHint = useStatsStore(state => state.recordHint)
   const bestScore = useStatsStore(state => state.bestScore)
+  const gamesWon = useStatsStore(state => state.gamesWon)
   const [history, setHistory] = useState<GameState[]>([])
   const [hintedTileIds, setHintedTileIds] = useState<string[]>([])
   const [lastSpentPowerUp, setLastSpentPowerUp] = useState<PowerUpId | null>(null)
@@ -143,14 +149,24 @@ export function GameplayScreen({ navigation, route }: Props) {
     [game, setGame],
   )
 
+  /**
+   * Starts a board at the size the player's cleared-board count has earned.
+   * Read from the store rather than a subscribed value so that winning a board
+   * cannot retrigger the focus effect below and deal a fresh one.
+   */
   const startNewRound = useCallback(
-    (gridSize = 4) => {
+    (gridSize?: number) => {
+      const size =
+        gridSize ??
+        getGridSizeForBoardsCompleted(useStatsStore.getState().gamesWon)
+
       resetHistory()
       clearMatchPath()
-      setGame(createNewGame(gridSize))
+      recordGamePlayed()
+      setGame(createNewGame(size))
       setStatus('playing')
     },
-    [clearMatchPath, resetHistory, setGame, setStatus],
+    [clearMatchPath, recordGamePlayed, resetHistory, setGame, setStatus],
   )
 
   const finishVictoryAction = useCallback(
@@ -164,17 +180,15 @@ export function GameplayScreen({ navigation, route }: Props) {
   useFocusEffect(
     useCallback(() => {
       if (route.params?.newGame) {
-        recordGamePlayed()
-        startNewRound(4)
+        startNewRound()
         navigation.setParams({ newGame: undefined })
         return
       }
 
       if (!useGameStore.getState().game) {
-        recordGamePlayed()
-        startNewRound(4)
+        startNewRound()
       }
-    }, [navigation, recordGamePlayed, route.params?.newGame, startNewRound]),
+    }, [navigation, route.params?.newGame, startNewRound]),
   )
 
   useEffect(() => {
@@ -457,11 +471,25 @@ export function GameplayScreen({ navigation, route }: Props) {
 
   const tilesRemaining = game.tiles.filter(tile => !tile.removed).length
 
+  // `gamesWon` already counts the board just cleared, so this is the size the
+  // next one will be dealt at.
+  const nextGridSize = getGridSizeForBoardsCompleted(gamesWon)
+  const boardsToNextStep = getBoardsUntilNextStep(gamesWon)
+  const victoryBody =
+    nextGridSize > game.gridSize
+      ? `The board steps up to ${getGridLabel(nextGridSize)}.`
+      : boardsToNextStep > 0
+        ? `${boardsToNextStep} more ${
+            boardsToNextStep === 1 ? 'board' : 'boards'
+          } until ${getGridLabel(nextGridSize + 1)}.`
+        : undefined
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <GameHud
         best={bestScore}
         coins={coins}
+        gridLabel={getGridLabel(game.gridSize)}
         moves={game.moves}
         onAddCoins={rewardedCoinAd.watchAd}
         onPause={() => setPaused(true)}
@@ -562,10 +590,9 @@ export function GameplayScreen({ navigation, route }: Props) {
 
       {game.status === 'won' ? (
         <GamePopup
+          body={victoryBody}
           icon="crown"
-          onPrimaryPress={() =>
-            finishVictoryAction(() => startNewRound(game.gridSize))
-          }
+          onPrimaryPress={() => finishVictoryAction(() => startNewRound())}
           onSecondaryPress={() =>
             finishVictoryAction(() => navigation.navigate(AppRoutes.HOME))
           }

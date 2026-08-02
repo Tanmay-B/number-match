@@ -74,8 +74,8 @@ function renderPaths(name: IconName, s: StrokeProps, color: string) {
     case 'coin':
       return (
         <>
-          <Circle {...s} cx={12} cy={12} r={9} />
-          <Circle {...s} cx={12} cy={12} r={4} />
+          <Circle {...s} cx={12} cy={12} r={8.5} />
+          <Circle cx={12} cy={12} fill={color} r={3} />
         </>
       )
     case 'plusCircle':
@@ -94,13 +94,17 @@ function renderPaths(name: IconName, s: StrokeProps, color: string) {
         />
       )
     case 'settings':
+      // Sliders rather than a cog: a cog at 20px is a circle ringed by short
+      // radial strokes, which is the same shape as the sun icon and read as
+      // one on the nav bar.
       return (
         <>
-          <Circle {...s} cx={12} cy={12} r={3.2} />
-          <Path
-            {...s}
-            d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"
-          />
+          <Line {...s} x1={4} x2={20} y1={7} y2={7} />
+          <Line {...s} x1={4} x2={20} y1={12} y2={12} />
+          <Line {...s} x1={4} x2={20} y1={17} y2={17} />
+          <Circle {...s} cx={9} cy={7} r={2} />
+          <Circle {...s} cx={15} cy={12} r={2} />
+          <Circle {...s} cx={11} cy={17} r={2} />
         </>
       )
     case 'infoCircle':

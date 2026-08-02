@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { initializeAds } from '@infra/ads/initializeAds'
+import { RewardedAdProvider } from '@infra/ads/RewardedAdProvider'
 import { Router } from '@router/index'
 
 function App() {
@@ -15,7 +16,9 @@ function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <Router />
+        <RewardedAdProvider>
+          <Router />
+        </RewardedAdProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )

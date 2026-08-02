@@ -10,7 +10,10 @@ import type { MatchPath } from '@modules/number-match/components/MatchPathOverla
 import { PauseMenu } from '@modules/number-match/components/PauseMenu'
 import { PowerUpButton } from '@modules/number-match/components/PowerUpButton'
 import { PowerUpOfferModal } from '@modules/number-match/components/PowerUpOfferModal'
-import { StuckBanner } from '@modules/number-match/components/StuckBanner'
+import {
+  StuckBanner,
+  STUCK_BANNER_HEIGHT,
+} from '@modules/number-match/components/StuckBanner'
 import { WatchAdButton } from '@modules/number-match/components/WatchAdButton'
 import { createNewGame } from '@modules/number-match/engine/BoardGenerator'
 import { findHintPair } from '@modules/number-match/engine/HintEngine'
@@ -121,6 +124,14 @@ export function GameplayScreen({ navigation, route }: Props) {
     [coins, spendCoins],
   )
 
+  // Mirrors `game` so the tile press handler can stay referentially stable.
+  // TileView is memoised on its props, and a handler that changed every render
+  // would re-render all 16 tiles on every store update.
+  const gameRef = useRef(game)
+  useEffect(() => {
+    gameRef.current = game
+  }, [game])
+
   const commitGame = useCallback(
     (next: GameState) => {
       if (game) {
@@ -221,20 +232,24 @@ export function GameplayScreen({ navigation, route }: Props) {
 
   const handleTilePress = useCallback(
     (tileId: string) => {
-      if (!game || game.status !== 'playing') {
+      const current = gameRef.current
+      if (!current || current.status !== 'playing') {
         return
       }
 
-      const next = applyTileSelection(game, tileId)
+      const next = applyTileSelection(current, tileId)
+      if (next === current) {
+        return
+      }
 
-      if (next.moves > game.moves) {
+      if (next.moves > current.moves) {
         recordMove()
 
         // The pair that just matched is the previously selected tile plus the
         // one tapped now. Capture their cells before the board re-renders.
-        const firstId = game.selectedTileIds[0]
-        const first = game.tiles.find(tile => tile.id === firstId)
-        const second = game.tiles.find(tile => tile.id === tileId)
+        const firstId = current.selectedTileIds[0]
+        const first = current.tiles.find(tile => tile.id === firstId)
+        const second = current.tiles.find(tile => tile.id === tileId)
 
         if (first && second) {
           matchTokenRef.current += 1
@@ -254,9 +269,11 @@ export function GameplayScreen({ navigation, route }: Props) {
         }
       }
 
-      commitGame(next)
+      setHistory(history => [...history.slice(-19), current])
+      setGame(next)
+      setHintedTileIds([])
     },
-    [commitGame, game, recordMove],
+    [recordMove, setGame],
   )
 
   const applyHint = useCallback(() => {
@@ -454,11 +471,17 @@ export function GameplayScreen({ navigation, route }: Props) {
         totalTiles={game.tiles.length}
       />
 
-      {isStuck && game.status === 'playing' ? (
-        <StuckBanner restoreCount={game.gridSize} theme={theme} />
-      ) : null}
+      {/*
+        Permanently reserved slot. The banner comes and goes inside it, so the
+        board never moves under the player's finger. The board is sized from
+        screen width, so holding this space back costs nothing but slack.
+      */}
+      <View style={styles.bannerSlot}>
+        {isStuck && game.status === 'playing' ? (
+          <StuckBanner restoreCount={game.gridSize} theme={theme} />
+        ) : null}
+      </View>
 
-      {/* Fixed-height stage: the board never reflows when the ad pill appears. */}
       <View style={styles.stage}>
         <Board
           game={game}
@@ -643,6 +666,10 @@ const styles = StyleSheet.create({
   stage: {
     alignItems: 'center',
     flex: 1,
+    justifyContent: 'center',
+  },
+  bannerSlot: {
+    height: STUCK_BANNER_HEIGHT,
     justifyContent: 'center',
   },
   adPillWrap: {

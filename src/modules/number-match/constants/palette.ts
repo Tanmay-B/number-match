@@ -38,18 +38,22 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${channel(r)}${channel(g)}${channel(b)}`.toUpperCase()
 }
 
+/** Blends a colour toward white. `amount` of 1 returns pure white. */
+export function tint(hex: string, amount: number): string {
+  const { r, g, b } = hexToRgb(hex)
+  return rgbToHex(
+    r + (255 - r) * amount,
+    g + (255 - g) * amount,
+    b + (255 - b) * amount,
+  )
+}
+
 /**
  * Near-white, tinted toward the source hue. Used for numerals sitting on a
  * coloured tile so the text belongs to the tile instead of floating on it.
  */
 export function softInk(hex: string): string {
-  const { r, g, b } = hexToRgb(hex)
-  const mix = 0.88
-  return rgbToHex(
-    r + (255 - r) * mix,
-    g + (255 - g) * mix,
-    b + (255 - b) * mix,
-  )
+  return tint(hex, 0.88)
 }
 
 /** Colour slots that differ between light and dark mode. */

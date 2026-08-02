@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text } from 'react-native'
 import Animated, {
   Easing,
@@ -6,6 +6,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withSpring,
@@ -17,6 +18,14 @@ import type { Tile } from '@modules/number-match/engine/types'
 
 const SPRING = { damping: 14, stiffness: 220, mass: 0.6 }
 
+/**
+ * Clear timings. The pop and the fade run back to back and finish together, so
+ * the tile reaches scale 0 and opacity 0 on the same frame and the swap to an
+ * empty cell is never visible.
+ */
+const CLEAR_POP_MS = 110
+const CLEAR_FADE_MS = 200
+
 type TileViewProps = {
   tile: Tile
   size: number
@@ -26,7 +35,7 @@ type TileViewProps = {
   onPress: (tileId: string) => void
 }
 
-export function TileView({
+function TileViewBase({
   tile,
   size,
   theme,
@@ -62,13 +71,31 @@ export function TileView({
         return
       }
 
-      opacity.value = withTiming(0, { duration: 240 })
+      // A hinted tile can be the one that clears; stop its loop first so the
+      // pulse does not fight the exit transform.
+      cancelAnimation(pulse)
+      pulse.value = 0
+
       scale.value = withSequence(
-        withTiming(1.28, { duration: 100, easing: Easing.out(Easing.quad) }),
-        withTiming(0.25, { duration: 160 }, finished => {
-          if (finished) {
-            runOnJS(setCleared)(true)
-          }
+        withTiming(1.22, {
+          duration: CLEAR_POP_MS,
+          easing: Easing.out(Easing.quad),
+        }),
+        withTiming(
+          0,
+          { duration: CLEAR_FADE_MS, easing: Easing.in(Easing.cubic) },
+          finished => {
+            if (finished) {
+              runOnJS(setCleared)(true)
+            }
+          },
+        ),
+      )
+      opacity.value = withDelay(
+        CLEAR_POP_MS,
+        withTiming(0, {
+          duration: CLEAR_FADE_MS,
+          easing: Easing.in(Easing.quad),
         }),
       )
       return
@@ -79,7 +106,7 @@ export function TileView({
       opacity.value = withTiming(1, { duration: 160 })
       scale.value = withSpring(1, SPRING)
     }
-  }, [cleared, opacity, scale, tile.removed])
+  }, [cleared, opacity, pulse, scale, tile.removed])
 
   useEffect(() => {
     selectLift.value = withSpring(selected ? 1 : 0, SPRING)
@@ -121,7 +148,6 @@ export function TileView({
             width: size,
             height: size,
             borderColor: theme.border,
-            borderRadius: RADIUS.xs,
           },
         ]}
       />
@@ -165,6 +191,23 @@ export function TileView({
   )
 }
 
+/**
+ * The board re-renders on every store change (score ticks, coin counts, hint
+ * state). Without this every tile re-renders mid-animation and the clear
+ * transition stutters. Engine updates preserve the identity of untouched
+ * `Tile` objects, so reference equality is a safe comparison here.
+ */
+export const TileView = memo(
+  TileViewBase,
+  (prev, next) =>
+    prev.tile === next.tile &&
+    prev.size === next.size &&
+    prev.selected === next.selected &&
+    prev.hinted === next.hinted &&
+    prev.theme === next.theme &&
+    prev.onPress === next.onPress,
+)
+
 const styles = StyleSheet.create({
   tile: {
     alignItems: 'center',
@@ -172,6 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyCell: {
+    borderRadius: RADIUS.xs,
     borderStyle: 'dashed',
     borderWidth: 1,
     opacity: 0.25,

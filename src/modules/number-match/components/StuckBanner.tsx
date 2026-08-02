@@ -18,6 +18,12 @@ import {
 } from '@modules/number-match/constants/tokens'
 import { Icon } from './Icon'
 
+/**
+ * Fixed height so the gameplay screen can reserve exactly this much space and
+ * the board never shifts when the banner appears.
+ */
+export const STUCK_BANNER_HEIGHT = 58
+
 type StuckBannerProps = {
   theme: AppTheme
   /** Number of tiles Add Lines will restore. */
@@ -65,11 +71,15 @@ export function StuckBanner({ theme, restoreCount }: StuckBannerProps) {
       ]}>
       <Icon color={theme.accent.ink} name="bulb" size={22} />
       <View style={styles.textWrap}>
-        <Text style={[styles.title, { color: theme.accent.ink }]}>
+        <Text
+          numberOfLines={1}
+          style={[styles.title, { color: theme.accent.ink }]}>
           NO MATCHES LEFT
         </Text>
-        <Text style={[styles.body, { color: theme.accent.ink }]}>
-          Rescue power-ups are free — Add Lines restores {restoreCount} numbers.
+        <Text
+          numberOfLines={1}
+          style={[styles.body, { color: theme.accent.ink }]}>
+          Rescue power-ups are free — Add Lines restores {restoreCount}.
         </Text>
       </View>
     </Animated.View>
@@ -82,9 +92,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     flexDirection: 'row',
     gap: SPACING.md,
+    height: STUCK_BANNER_HEIGHT - SPACING.sm,
     marginBottom: SPACING.sm,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
   },
   textWrap: {
     flex: 1,

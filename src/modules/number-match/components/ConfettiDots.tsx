@@ -1,9 +1,11 @@
 import { StyleSheet, View } from 'react-native'
-import type { AppTheme } from '@modules/number-match/constants/palette'
+import { tint, type AppTheme } from '@modules/number-match/constants/palette'
 
 type DotSpec = {
   size: number
+  /** Which role supplies the colour, and how far to lighten it. */
   role: 'accent' | 'accentAlt' | 'support' | 'secondary' | 'warm'
+  lighten?: number
   top?: number
   bottom?: number
   left?: number
@@ -11,16 +13,14 @@ type DotSpec = {
 }
 
 /**
- * Fixed positions rather than random ones, so the decoration is stable across
- * re-renders and identical on every launch.
+ * Fixed positions taken from the design, rather than random ones, so the
+ * decoration is stable across re-renders and identical on every launch.
  */
 const DOTS: DotSpec[] = [
-  { size: 10, role: 'accent', top: 12, left: 14 },
-  { size: 8, role: 'accentAlt', top: 74, right: 20 },
-  { size: 7, role: 'support', top: 190, left: 8 },
-  { size: 9, role: 'secondary', bottom: 150, right: 12 },
-  { size: 6, role: 'warm', bottom: 60, left: 22 },
-  { size: 7, role: 'accent', bottom: 250, left: 30 },
+  { size: 10, role: 'accent', top: 10, left: 14 },
+  { size: 8, role: 'accentAlt', top: 60, right: 20 },
+  { size: 7, role: 'support', top: 140, left: 8 },
+  { size: 9, role: 'secondary', lighten: 0.45, bottom: 120, right: 12 },
 ]
 
 type ConfettiDotsProps = {
@@ -42,8 +42,10 @@ export function ConfettiDots({ theme, opacity = 1 }: ConfettiDotsProps) {
               width: dot.size,
               height: dot.size,
               borderRadius: dot.size / 2,
-              backgroundColor: theme[dot.role].bg,
-              opacity: (theme.isDark ? 0.9 : 0.55) * opacity,
+              backgroundColor: dot.lighten
+                ? tint(theme[dot.role].bg, dot.lighten)
+                : theme[dot.role].bg,
+              opacity: (theme.isDark ? 1 : 0.55) * opacity,
               top: dot.top,
               bottom: dot.bottom,
               left: dot.left,

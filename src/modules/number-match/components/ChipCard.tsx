@@ -37,7 +37,7 @@ export function ChipCard({
         pressed && !disabled && styles.pressed,
         style,
       ]}>
-      <Icon color={role.ink} name={icon} size={19} />
+      <Icon color={role.ink} name={icon} size={18} />
       <Text style={[styles.label, { color: role.ink }]}>{label}</Text>
     </Pressable>
   )
@@ -75,7 +75,7 @@ export function ChipRow({
         pressed && !disabled && styles.pressed,
       ]}>
       <View style={styles.rowLeft}>
-        <Icon color={role.ink} name={icon} size={17} />
+        <Icon color={role.ink} name={icon} size={15} />
         <Text style={[styles.rowLabel, { color: role.ink }]}>{label}</Text>
       </View>
       {meta ? (

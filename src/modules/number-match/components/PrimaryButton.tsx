@@ -3,7 +3,6 @@ import type { AppTheme } from '@modules/number-match/constants/palette'
 import {
   RADIUS,
   SPACING,
-  TYPE,
   elevation,
 } from '@modules/number-match/constants/tokens'
 import { Icon, type IconName } from './Icon'
@@ -35,7 +34,7 @@ type PrimaryButtonProps = {
 const SIZES: Record<ButtonSize, { minHeight: number; paddingHorizontal: number }> =
   {
     hero: { minHeight: 66, paddingHorizontal: SPACING.xl },
-    regular: { minHeight: 54, paddingHorizontal: SPACING.xl },
+    regular: { minHeight: 52, paddingHorizontal: SPACING.xl },
     compact: { minHeight: 40, paddingHorizontal: SPACING.md },
   }
 

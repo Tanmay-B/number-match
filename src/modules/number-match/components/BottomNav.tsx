@@ -61,7 +61,7 @@ export function BottomNav({ theme, active, onNavigate }: BottomNavProps) {
             <Icon
               color={isActive ? theme.accent.bg : theme.muted}
               name={tab.icon}
-              size={22}
+              size={20}
             />
           </Pressable>
         )

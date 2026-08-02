@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import {
   BOARD_GAP,
@@ -27,14 +28,22 @@ export function Board({
   const tileSize = getTileSize(game.gridSize)
   const boardSize = getBoardSize(game.gridSize)
 
+  // One pass instead of a linear scan per cell, so a 6x6 board costs 36 lookups
+  // rather than 1,296 during an animation frame.
+  const tilesByCell = useMemo(() => {
+    const map = new Map<string, (typeof game.tiles)[number]>()
+    for (const tile of game.tiles) {
+      map.set(`${tile.row},${tile.col}`, tile)
+    }
+    return map
+  }, [game.tiles])
+
   return (
     <View style={[styles.board, { width: boardSize, height: boardSize }]}>
       {Array.from({ length: game.gridSize }).map((_, row) => (
         <View key={`row-${row}`} style={styles.row}>
           {Array.from({ length: game.gridSize }).map((__, col) => {
-            const tile = game.tiles.find(
-              current => current.row === row && current.col === col,
-            )
+            const tile = tilesByCell.get(`${row},${col}`)
 
             if (!tile) {
               return (

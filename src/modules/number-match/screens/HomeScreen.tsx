@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { APP_VERSION } from '@modules/number-match/constants/storage'
-import { SPACING, RADIUS, TYPE } from '@modules/number-match/constants/tokens'
+import { RADIUS } from '@modules/number-match/constants/tokens'
 import { BottomNav } from '@modules/number-match/components/BottomNav'
 import { ChipCard, ChipRow } from '@modules/number-match/components/ChipCard'
 import { CoinBadge } from '@modules/number-match/components/CoinBadge'
@@ -25,14 +24,14 @@ export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme()
   const coins = useGameStore(state => state.coins)
   const savedGame = useGameStore(state => state.game)
+  const gamesWon = useStatsStore(state => state.gamesWon)
   const currentStreak = useStatsStore(state => state.currentStreak)
   const rewardedCoinAd = useRewardedCoinAd()
   const [showHowToPlay, setShowHowToPlay] = useState(false)
 
   const canResume = Boolean(savedGame && savedGame.status === 'playing')
-  const tilesLeft = savedGame
-    ? savedGame.tiles.filter(tile => !tile.removed).length
-    : 0
+  // The board you are on is one past every board you have cleared.
+  const level = gamesWon + 1
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -58,7 +57,7 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.warm.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.warm.ink} name="flame" size={17} />
+              <Icon color={theme.warm.ink} name="flame" size={16} />
             </Pressable>
             <Pressable
               accessibilityLabel="Settings"
@@ -69,7 +68,7 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.support.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.support.ink} name="settings" size={17} />
+              <Icon color={theme.support.ink} name="settings" size={16} />
             </Pressable>
           </View>
         </View>
@@ -78,28 +77,29 @@ export function HomeScreen({ navigation }: Props) {
           <GameLogo theme={theme} />
         </View>
 
-        <TileStrip theme={theme} />
-
-        <View style={styles.actions}>
-          {canResume ? (
-            <PrimaryButton
-              label={`Continue · ${savedGame!.score.toLocaleString()} pts`}
-              onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
-              subtitle={`${tilesLeft} ${tilesLeft === 1 ? 'tile' : 'tiles'} left`}
-              theme={theme}
-              variant="primary"
-            />
-          ) : null}
-
-          <PrimaryButton
-            label="New game"
-            onPress={() =>
-              navigation.navigate(AppRoutes.GAMEPLAY, { newGame: true })
-            }
-            theme={theme}
-            variant={canResume ? 'secondary' : 'primary'}
-          />
+        <View style={styles.stripWrap}>
+          <TileStrip theme={theme} />
         </View>
+
+        {canResume ? (
+          <PrimaryButton
+            label={`Continue · level ${level}`}
+            onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
+            style={styles.continueButton}
+            theme={theme}
+            variant="primary"
+          />
+        ) : null}
+
+        <PrimaryButton
+          label="New game"
+          onPress={() =>
+            navigation.navigate(AppRoutes.GAMEPLAY, { newGame: true })
+          }
+          style={styles.newGameButton}
+          theme={theme}
+          variant={canResume ? 'secondary' : 'primary'}
+        />
 
         <View style={styles.chipRow}>
           <ChipCard
@@ -132,10 +132,6 @@ export function HomeScreen({ navigation }: Props) {
           onPress={rewardedCoinAd.watchAd}
           role={theme.accent}
         />
-
-        <Text style={[styles.version, { color: theme.muted }]}>
-          v{APP_VERSION}
-        </Text>
       </ScrollView>
 
       <View style={styles.navWrap}>
@@ -153,52 +149,53 @@ export function HomeScreen({ navigation }: Props) {
   )
 }
 
+// Vertical rhythm is taken straight from the design rather than a uniform gap.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   content: {
-    gap: SPACING.md,
-    paddingBottom: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
+    padding: 18,
   },
   topRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 16,
   },
   topActions: {
     flexDirection: 'row',
-    gap: SPACING.sm + 2,
+    gap: 10,
   },
   circleButton: {
     alignItems: 'center',
     borderRadius: RADIUS.pill,
-    height: 34,
+    height: 32,
     justifyContent: 'center',
-    width: 34,
+    width: 32,
   },
   logoWrap: {
     alignItems: 'center',
-    paddingVertical: SPACING.xs,
+    marginBottom: 20,
   },
-  actions: {
-    gap: SPACING.sm + 2,
+  stripWrap: {
+    marginBottom: 16,
+  },
+  continueButton: {
+    marginBottom: 10,
+  },
+  newGameButton: {
+    marginBottom: 16,
   },
   chipRow: {
     flexDirection: 'row',
-    gap: SPACING.sm + 2,
-  },
-  version: {
-    ...TYPE.caption,
-    marginTop: SPACING.xs,
-    textAlign: 'center',
+    gap: 10,
+    marginBottom: 10,
   },
   navWrap: {
-    paddingBottom: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.xs,
+    paddingBottom: 10,
+    paddingHorizontal: 18,
+    paddingTop: 8,
   },
   pressed: {
     opacity: 0.8,

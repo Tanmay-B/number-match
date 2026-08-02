@@ -47,6 +47,14 @@ export function HomeScreen({ navigation }: Props) {
   // The board you are on is one past every board you have cleared.
   const level = gamesWon + 1
 
+  const adRowMeta = !rewardedCoinAd.canWatch
+    ? 'Limit reached'
+    : rewardedCoinAd.errorMessage
+      ? 'Tap to retry'
+      : rewardedCoinAd.isLoading
+        ? 'Loading…'
+        : `${rewardedCoinAd.remainingToday}/${rewardedCoinAd.dailyCap} left`
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <FloatingNumbers theme={theme} />
@@ -143,16 +151,14 @@ export function HomeScreen({ navigation }: Props) {
           Deliberately stays at full strength while an ad is still loading —
           dimming it made the row look broken for the seconds before the SDK
           reports ready. It only greys out once the daily cap is actually spent.
+          The meta line reports a load failure so the reason is visible on the
+          device rather than only in the log.
         */}
         <ChipRow
           disabled={!rewardedCoinAd.canWatch}
           icon="play"
           label={`Watch ad for ${rewardedCoinAd.rewardAmount} coins`}
-          meta={
-            rewardedCoinAd.canWatch
-              ? `${rewardedCoinAd.remainingToday}/${rewardedCoinAd.dailyCap} left`
-              : 'Limit reached'
-          }
+          meta={adRowMeta}
           onPress={rewardedCoinAd.watchAd}
           role={theme.accent}
         />

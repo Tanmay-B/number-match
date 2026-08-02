@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useRewardedAd } from 'react-native-google-mobile-ads'
 import { AD_REWARDS } from '@modules/number-match/constants/storage'
+import { describeAdError, logAdEvent } from '@infra/ads/adLog'
 import { AD_UNITS } from '@infra/ads/adUnits'
+import { useAdLoadRetry } from '@infra/ads/useAdLoadRetry'
 import { useAdsReady } from '@infra/ads/useAdsReady'
 import { useAdRewardStore } from '@store/adReward.store'
 import { useGameStore } from '@store/game.store'
@@ -62,9 +64,25 @@ export function useRewardedCoinAd() {
     }
   }, [canWatchToday, isClosed, load])
 
+  useAdLoadRetry({
+    enabled: adsReady && canWatchToday(),
+    error,
+    isLoaded,
+    label: 'rewarded',
+    load,
+  })
+
   const watchAd = useCallback(
     (options?: WatchAdOptions) => {
-      if (!canWatchToday() || !isLoaded || isShowing) {
+      if (!canWatchToday() || isShowing) {
+        return false
+      }
+
+      // Nothing ready yet: kick off a load so tapping again can work, rather
+      // than having the button do nothing at all.
+      if (!isLoaded) {
+        logAdEvent('rewarded: tapped with no ad ready, loading')
+        load()
         return false
       }
 
@@ -75,7 +93,7 @@ export function useRewardedCoinAd() {
       show()
       return true
     },
-    [canWatchToday, isLoaded, isShowing, show],
+    [canWatchToday, isLoaded, isShowing, load, show],
   )
 
   return {
@@ -87,6 +105,8 @@ export function useRewardedCoinAd() {
     isShowing,
     isLoading: adsReady && canWatchToday() && !isLoaded && !error,
     error,
+    /** Short reason for the last failure, for display. */
+    errorMessage: error ? describeAdError(error) : undefined,
     watchAd,
   }
 }

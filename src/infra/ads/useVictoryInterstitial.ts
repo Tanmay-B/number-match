@@ -1,19 +1,22 @@
 import { useCallback, useEffect } from 'react'
 import { useInterstitialAd } from 'react-native-google-mobile-ads'
 import { AD_UNITS } from '@infra/ads/adUnits'
+import { useAdLoadRetry } from '@infra/ads/useAdLoadRetry'
 import { useAdsReady } from '@infra/ads/useAdsReady'
 
 export function useVictoryInterstitial() {
   const adsReady = useAdsReady()
-  const { isLoaded, isShowing, load, show } = useInterstitialAd(
+  const { isLoaded, isShowing, error, load, show } = useInterstitialAd(
     adsReady ? AD_UNITS.interstitial : null,
   )
 
-  useEffect(() => {
-    if (adsReady) {
-      load()
-    }
-  }, [adsReady, load])
+  useAdLoadRetry({
+    enabled: adsReady,
+    error,
+    isLoaded,
+    label: 'interstitial',
+    load,
+  })
 
   const showAfterVictory = useCallback(() => {
     if (!isLoaded || isShowing) {

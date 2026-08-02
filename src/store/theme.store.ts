@@ -12,7 +12,9 @@ type ThemeStore = {
 }
 
 export const useThemeStore = create<ThemeStore>(set => ({
-  themeMode: null,
+  // Dark by default so the first frames match the stored preference that
+  // hydration is about to apply, instead of flashing the light palette.
+  themeMode: 'dark',
   isHydrated: false,
   setThemeMode: themeMode => {
     set({ themeMode })

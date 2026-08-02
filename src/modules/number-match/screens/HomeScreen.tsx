@@ -20,6 +20,19 @@ import { AppRoutes, AppStackParams } from '@router/routes'
 
 type Props = NativeStackScreenProps<AppStackParams, AppRoutes.HOME>
 
+/**
+ * A gap from the design, expressed as a flex weight.
+ *
+ * The design is a content-height card; a phone has roughly 200pt more to fill.
+ * Weighting each gap by its designed size means that surplus is shared out in
+ * the design's own 16/20/16/10/16/10 rhythm rather than pooling in one place.
+ * `minHeight` keeps the designed spacing intact when there is no surplus to
+ * share, at which point the page simply scrolls.
+ */
+function Gap({ size }: { size: number }) {
+  return <View style={{ flex: size, minHeight: scale(size) }} />
+}
+
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme()
   const coins = useGameStore(state => state.coins)
@@ -73,24 +86,23 @@ export function HomeScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/*
-          The hero absorbs whatever vertical space is left over, so the page
-          fills the viewport on a tall phone instead of stacking against the
-          top edge, and still scrolls if a short one runs out of room.
-        */}
-        <View style={styles.hero}>
-          <GameLogo theme={theme} />
-          <TileStrip theme={theme} />
-        </View>
+        <Gap size={16} />
+        <GameLogo theme={theme} />
 
+        <Gap size={20} />
+        <TileStrip theme={theme} />
+
+        <Gap size={16} />
         {canResume ? (
-          <PrimaryButton
-            label={`Continue · level ${level}`}
-            onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
-            style={styles.continueButton}
-            theme={theme}
-            variant="primary"
-          />
+          <>
+            <PrimaryButton
+              label={`Continue · level ${level}`}
+              onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
+              theme={theme}
+              variant="primary"
+            />
+            <Gap size={10} />
+          </>
         ) : null}
 
         <PrimaryButton
@@ -98,11 +110,11 @@ export function HomeScreen({ navigation }: Props) {
           onPress={() =>
             navigation.navigate(AppRoutes.GAMEPLAY, { newGame: true })
           }
-          style={styles.newGameButton}
           theme={theme}
           variant={canResume ? 'secondary' : 'primary'}
         />
 
+        <Gap size={16} />
         <View style={styles.chipRow}>
           <ChipCard
             icon="infoCircle"
@@ -118,14 +130,16 @@ export function HomeScreen({ navigation }: Props) {
           />
         </View>
 
+        <Gap size={10} />
+        {/*
+          Deliberately stays at full strength while an ad is still loading —
+          dimming it made the row look broken for the seconds before the SDK
+          reports ready. It only greys out once the daily cap is actually spent.
+        */}
         <ChipRow
-          disabled={!rewardedCoinAd.canWatch || !rewardedCoinAd.isLoaded}
+          disabled={!rewardedCoinAd.canWatch}
           icon="play"
-          label={
-            rewardedCoinAd.isLoading
-              ? 'Loading ad…'
-              : `Watch ad for ${rewardedCoinAd.rewardAmount} coins`
-          }
+          label={`Watch ad for ${rewardedCoinAd.rewardAmount} coins`}
           meta={
             rewardedCoinAd.canWatch
               ? `${rewardedCoinAd.remainingToday}/${rewardedCoinAd.dailyCap} left`
@@ -152,10 +166,8 @@ export function HomeScreen({ navigation }: Props) {
 }
 
 /**
- * Every measurement here is the value from the design, put through `scale()`
- * so the proportions hold on any screen width. The only departure is the hero,
- * which stretches to soak up leftover height on a tall phone rather than
- * leaving the page stacked against the top edge.
+ * Every measurement is the design's own value put through `scale()`, so the
+ * proportions hold on any screen width. Vertical gaps live in `Gap` above.
  */
 const styles = StyleSheet.create({
   container: {
@@ -169,7 +181,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: scale(16),
   },
   topActions: {
     flexDirection: 'row',
@@ -182,28 +193,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: scale(32),
   },
-  hero: {
-    alignItems: 'stretch',
-    flex: 1,
-    gap: scale(20),
-    justifyContent: 'center',
-    marginBottom: scale(16),
-  },
-  continueButton: {
-    marginBottom: scale(10),
-  },
-  newGameButton: {
-    marginBottom: scale(16),
-  },
   chipRow: {
     flexDirection: 'row',
     gap: scale(10),
-    marginBottom: scale(10),
   },
   navWrap: {
     paddingBottom: scale(10),
     paddingHorizontal: scale(18),
-    paddingTop: scale(10),
+    paddingTop: scale(18),
   },
   pressed: {
     opacity: 0.8,

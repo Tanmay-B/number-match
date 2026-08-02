@@ -1,11 +1,12 @@
 import { StyleSheet, View } from 'react-native'
-import { tint, type AppTheme } from '@modules/number-match/constants/palette'
+import type { AppTheme } from '@modules/number-match/constants/palette'
 
 type DotSpec = {
   size: number
-  /** Which role supplies the colour, and how far to lighten it. */
+  /** Which role supplies the colour. */
   role: 'accent' | 'accentAlt' | 'support' | 'secondary' | 'warm'
-  lighten?: number
+  /** Overrides the role colour with a literal from the design. */
+  color?: string
   top?: number
   bottom?: number
   left?: number
@@ -20,7 +21,7 @@ const DOTS: DotSpec[] = [
   { size: 10, role: 'accent', top: 10, left: 14 },
   { size: 8, role: 'accentAlt', top: 60, right: 20 },
   { size: 7, role: 'support', top: 140, left: 8 },
-  { size: 9, role: 'secondary', lighten: 0.45, bottom: 120, right: 12 },
+  { size: 9, role: 'secondary', color: '#85B7EB', bottom: 120, right: 12 },
 ]
 
 type ConfettiDotsProps = {
@@ -42,9 +43,7 @@ export function ConfettiDots({ theme, opacity = 1 }: ConfettiDotsProps) {
               width: dot.size,
               height: dot.size,
               borderRadius: dot.size / 2,
-              backgroundColor: dot.lighten
-                ? tint(theme[dot.role].bg, dot.lighten)
-                : theme[dot.role].bg,
+              backgroundColor: dot.color ?? theme[dot.role].bg,
               opacity: (theme.isDark ? 1 : 0.55) * opacity,
               top: dot.top,
               bottom: dot.bottom,

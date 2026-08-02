@@ -112,6 +112,8 @@ type ThemeDefinition = {
   /** Short line shown on the theme card. */
   blurb: string
   tiles: Record<number, string>
+  /** Overrides for numerals the design specifies explicitly. */
+  tileInk?: Partial<Record<number, string>>
   roles: ThemeRoles
   light: ThemeSurfaces
   dark: ThemeSurfaces
@@ -131,6 +133,14 @@ const CANDY: ThemeDefinition = {
     7: '#1D9E75',
     8: '#D85A30',
     9: '#C23B52',
+  },
+  // Exact numeral colours from the design; the rest fall back to softInk().
+  tileInk: {
+    1: '#FBEAF0',
+    2: '#EEEDFE',
+    3: '#E6F1FB',
+    7: '#E1F5EE',
+    8: '#FAECE7',
   },
   roles: {
     primary: { bg: '#639922', ink: '#EAF3DE' },
@@ -398,7 +408,7 @@ function getTileInk(definition: ThemeDefinition): Record<number, string> {
 
   const ink: Record<number, string> = {}
   for (const [value, color] of Object.entries(definition.tiles)) {
-    ink[Number(value)] = softInk(color)
+    ink[Number(value)] = definition.tileInk?.[Number(value)] ?? softInk(color)
   }
   TILE_INK_CACHE.set(definition.id, ink)
   return ink

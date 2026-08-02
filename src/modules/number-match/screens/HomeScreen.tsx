@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { GAME_TAGLINE } from '@modules/number-match/constants/gameCopy'
 import { RADIUS, scale } from '@modules/number-match/constants/tokens'
 import { BottomNav } from '@modules/number-match/components/BottomNav'
 import { ChipCard, ChipRow } from '@modules/number-match/components/ChipCard'
@@ -87,7 +88,14 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <Gap size={16} />
-        <GameLogo theme={theme} />
+        {/* Tagline sits with the logo as one block, so the gap below stays
+            the spacing the design puts between the title and the strip. */}
+        <View style={styles.logoBlock}>
+          <GameLogo theme={theme} />
+          <Text style={[styles.tagline, { color: theme.muted }]}>
+            {GAME_TAGLINE}
+          </Text>
+        </View>
 
         <Gap size={20} />
         <TileStrip theme={theme} />
@@ -192,6 +200,15 @@ const styles = StyleSheet.create({
     height: scale(32),
     justifyContent: 'center',
     width: scale(32),
+  },
+  logoBlock: {
+    alignItems: 'center',
+    gap: scale(8),
+  },
+  tagline: {
+    fontSize: scale(14),
+    fontWeight: '400',
+    textAlign: 'center',
   },
   chipRow: {
     flexDirection: 'row',

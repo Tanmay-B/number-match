@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import type { AppTheme } from '@modules/number-match/constants/palette'
-import { RADIUS, SPACING } from '@modules/number-match/constants/tokens'
+import { scale } from '@modules/number-match/constants/tokens'
 import { Icon, type IconName } from './Icon'
 import { AppRoutes } from '@router/routes'
 
@@ -61,7 +61,7 @@ export function BottomNav({ theme, active, onNavigate }: BottomNavProps) {
             <Icon
               color={isActive ? theme.accent.bg : theme.muted}
               name={tab.icon}
-              size={23}
+              size={scale(20)}
             />
           </Pressable>
         )
@@ -72,11 +72,11 @@ export function BottomNav({ theme, active, onNavigate }: BottomNavProps) {
 
 const styles = StyleSheet.create({
   bar: {
-    borderRadius: RADIUS.lg,
+    borderRadius: scale(20),
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: scale(10),
   },
   tab: {
     alignItems: 'center',

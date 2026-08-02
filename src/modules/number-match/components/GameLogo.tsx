@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import type { AppTheme } from '@modules/number-match/constants/palette'
+import { scale } from '@modules/number-match/constants/tokens'
 
 type GameLogoProps = {
   theme: AppTheme
@@ -84,11 +85,11 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   wordLarge: {
-    fontSize: 42,
-    lineHeight: 50,
+    fontSize: scale(34),
+    lineHeight: scale(40),
   },
   wordMedium: {
-    fontSize: 26,
-    lineHeight: 31,
+    fontSize: scale(26),
+    lineHeight: scale(31),
   },
 })

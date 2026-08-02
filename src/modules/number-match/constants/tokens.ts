@@ -1,4 +1,26 @@
-import type { TextStyle, ViewStyle } from 'react-native'
+import { Dimensions, type TextStyle, type ViewStyle } from 'react-native'
+
+/** Width of the canvas the designs are drawn on. */
+const DESIGN_WIDTH = 360
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
+/**
+ * How much larger this device is than the design canvas. Clamped so a tablet
+ * does not end up with absurd type, and a very narrow phone stays legible.
+ */
+export const SCALE = Math.min(1.3, Math.max(0.85, SCREEN_WIDTH / DESIGN_WIDTH))
+
+/**
+ * Converts a measurement taken from a design into device points.
+ *
+ * Use this for anything specified in a mockup — padding, radii, font sizes —
+ * so the layout keeps the designed proportions on every screen width instead
+ * of being hand-tuned per element.
+ */
+export function scale(size: number): number {
+  return Math.round(size * SCALE)
+}
 
 /**
  * Shared spacing / radius / type / motion scale.

@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import type { AppTheme } from '@modules/number-match/constants/palette'
 import {
-  RADIUS,
   SPACING,
   elevation,
+  scale,
 } from '@modules/number-match/constants/tokens'
 import { Icon, type IconName } from './Icon'
 
@@ -33,9 +33,9 @@ type PrimaryButtonProps = {
 
 const SIZES: Record<ButtonSize, { minHeight: number; paddingHorizontal: number }> =
   {
-    hero: { minHeight: 66, paddingHorizontal: SPACING.xl },
-    regular: { minHeight: 52, paddingHorizontal: SPACING.xl },
-    compact: { minHeight: 40, paddingHorizontal: SPACING.md },
+    hero: { minHeight: scale(60), paddingHorizontal: scale(20) },
+    regular: { minHeight: scale(52), paddingHorizontal: scale(20) },
+    compact: { minHeight: scale(40), paddingHorizontal: scale(12) },
   }
 
 function resolveColors(variant: ButtonVariant, theme: AppTheme) {
@@ -140,7 +140,7 @@ export function PrimaryButton({
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
-    borderRadius: RADIUS.lg,
+    borderRadius: scale(20),
     justifyContent: 'center',
   },
   inner: {
@@ -152,12 +152,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: scale(16),
     fontWeight: '500',
     letterSpacing: 0.2,
   },
   heroLabel: {
-    fontSize: 18,
+    fontSize: scale(17),
     fontWeight: '500',
     letterSpacing: 0.3,
   },

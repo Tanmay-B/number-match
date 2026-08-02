@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import type { ColorRole } from '@modules/number-match/constants/palette'
-import { RADIUS, SPACING } from '@modules/number-match/constants/tokens'
+import { scale } from '@modules/number-match/constants/tokens'
 import { Icon, type IconName } from './Icon'
 
 type ChipCardProps = {
@@ -37,7 +37,7 @@ export function ChipCard({
         pressed && !disabled && styles.pressed,
         style,
       ]}>
-      <Icon color={role.ink} name={icon} size={22} />
+      <Icon color={role.ink} name={icon} size={scale(18)} />
       <Text style={[styles.label, { color: role.ink }]}>{label}</Text>
     </Pressable>
   )
@@ -75,7 +75,7 @@ export function ChipRow({
         pressed && !disabled && styles.pressed,
       ]}>
       <View style={styles.rowLeft}>
-        <Icon color={role.ink} name={icon} size={17} />
+        <Icon color={role.ink} name={icon} size={scale(15)} />
         <Text style={[styles.rowLabel, { color: role.ink }]}>{label}</Text>
       </View>
       {meta ? (
@@ -88,38 +88,38 @@ export function ChipRow({
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    borderRadius: RADIUS.md,
+    borderRadius: scale(16),
     flex: 1,
-    gap: SPACING.sm - 2,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.lg + 2,
+    gap: scale(4),
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(12),
   },
   label: {
-    fontSize: 12,
+    fontSize: scale(11),
     fontWeight: '500',
     textAlign: 'center',
   },
   row: {
     alignItems: 'center',
-    borderRadius: RADIUS.md,
+    borderRadius: scale(16),
     flexDirection: 'row',
-    gap: SPACING.sm,
+    gap: scale(8),
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.lg,
+    paddingHorizontal: scale(14),
+    paddingVertical: scale(12),
   },
   rowLeft: {
     alignItems: 'center',
     flexDirection: 'row',
     flexShrink: 1,
-    gap: SPACING.xs + 2,
+    gap: scale(6),
   },
   rowLabel: {
-    fontSize: 14,
+    fontSize: scale(13),
     fontWeight: '500',
   },
   rowMeta: {
-    fontSize: 12,
+    fontSize: scale(11),
     fontWeight: '400',
   },
   disabled: {

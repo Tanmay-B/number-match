@@ -7,7 +7,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import type { AppTheme } from '@modules/number-match/constants/palette'
-import { RADIUS, SPACING, HIT_SLOP } from '@modules/number-match/constants/tokens'
+import {
+  SPACING,
+  HIT_SLOP,
+  scale,
+} from '@modules/number-match/constants/tokens'
 import { useCountUp } from '@modules/number-match/hooks/useCountUp'
 import { Icon } from './Icon'
 
@@ -43,7 +47,7 @@ export function CoinBadge({
     transform: [{ scale: valueScale.value }],
   }))
 
-  const iconSize = compact ? 15 : 18
+  const iconSize = compact ? 15 : scale(16)
 
   return (
     <View
@@ -80,11 +84,11 @@ const styles = StyleSheet.create({
   badge: {
     alignItems: 'center',
     alignSelf: 'flex-start',
-    borderRadius: RADIUS.lg,
+    borderRadius: scale(20),
     flexDirection: 'row',
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.md + 2,
-    paddingVertical: SPACING.sm + 1,
+    gap: scale(6),
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(6),
   },
   compact: {
     gap: SPACING.xs,
@@ -92,7 +96,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xs + 1,
   },
   value: {
-    fontSize: 15,
+    fontSize: scale(14),
     fontWeight: '500',
   },
   compactValue: {

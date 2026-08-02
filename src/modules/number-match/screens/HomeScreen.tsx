@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { RADIUS } from '@modules/number-match/constants/tokens'
+import { RADIUS, scale } from '@modules/number-match/constants/tokens'
 import { BottomNav } from '@modules/number-match/components/BottomNav'
 import { ChipCard, ChipRow } from '@modules/number-match/components/ChipCard'
 import { CoinBadge } from '@modules/number-match/components/CoinBadge'
@@ -57,7 +57,7 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.warm.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.warm.ink} name="flame" size={19} />
+              <Icon color={theme.warm.ink} name="flame" size={scale(16)} />
             </Pressable>
             <Pressable
               accessibilityLabel="Settings"
@@ -68,7 +68,7 @@ export function HomeScreen({ navigation }: Props) {
                 { backgroundColor: theme.support.bg },
                 pressed && styles.pressed,
               ]}>
-              <Icon color={theme.support.ink} name="settings" size={19} />
+              <Icon color={theme.support.ink} name="settings" size={scale(16)} />
             </Pressable>
           </View>
         </View>
@@ -87,8 +87,7 @@ export function HomeScreen({ navigation }: Props) {
           <PrimaryButton
             label={`Continue · level ${level}`}
             onPress={() => navigation.navigate(AppRoutes.GAMEPLAY)}
-            size="hero"
-            style={styles.action}
+            style={styles.continueButton}
             theme={theme}
             variant="primary"
           />
@@ -99,8 +98,7 @@ export function HomeScreen({ navigation }: Props) {
           onPress={() =>
             navigation.navigate(AppRoutes.GAMEPLAY, { newGame: true })
           }
-          size="hero"
-          style={styles.action}
+          style={styles.newGameButton}
           theme={theme}
           variant={canResume ? 'secondary' : 'primary'}
         />
@@ -153,52 +151,59 @@ export function HomeScreen({ navigation }: Props) {
   )
 }
 
+/**
+ * Every measurement here is the value from the design, put through `scale()`
+ * so the proportions hold on any screen width. The only departure is the hero,
+ * which stretches to soak up leftover height on a tall phone rather than
+ * leaving the page stacked against the top edge.
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   content: {
-    // flexGrow lets the hero stretch on tall screens while still allowing the
-    // page to scroll on short ones.
     flexGrow: 1,
-    padding: 18,
+    padding: scale(18),
   },
   topRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: scale(16),
   },
   topActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: scale(10),
   },
   circleButton: {
     alignItems: 'center',
     borderRadius: RADIUS.pill,
-    height: 38,
+    height: scale(32),
     justifyContent: 'center',
-    width: 38,
+    width: scale(32),
   },
   hero: {
     alignItems: 'stretch',
     flex: 1,
-    gap: 28,
+    gap: scale(20),
     justifyContent: 'center',
-    minHeight: 180,
-    paddingVertical: 24,
+    marginBottom: scale(16),
   },
-  action: {
-    marginBottom: 12,
+  continueButton: {
+    marginBottom: scale(10),
+  },
+  newGameButton: {
+    marginBottom: scale(16),
   },
   chipRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    gap: scale(10),
+    marginBottom: scale(10),
   },
   navWrap: {
-    paddingBottom: 10,
-    paddingHorizontal: 18,
-    paddingTop: 10,
+    paddingBottom: scale(10),
+    paddingHorizontal: scale(18),
+    paddingTop: scale(10),
   },
   pressed: {
     opacity: 0.8,

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import type { AppTheme } from '@modules/number-match/constants/palette'
-import { RADIUS, SPACING, TYPE } from '@modules/number-match/constants/tokens'
+import { TYPE, scale } from '@modules/number-match/constants/tokens'
 
 /** Values chosen to spread across the palette rather than to mean anything. */
 const STRIP_VALUES = [2, 8, 3, 7, 1]
@@ -29,17 +29,17 @@ export function TileStrip({ theme }: TileStripProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    gap: SPACING.xs + 2,
+    gap: scale(6),
   },
   tile: {
     alignItems: 'center',
-    borderRadius: RADIUS.sm,
+    borderRadius: scale(8),
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: scale(8),
   },
   value: {
     ...TYPE.label,
-    fontSize: 17,
+    fontSize: scale(13),
   },
 })

@@ -7,7 +7,7 @@ import { RADIUS, scale } from '@modules/number-match/constants/tokens'
 import { BottomNav } from '@modules/number-match/components/BottomNav'
 import { ChipCard, ChipRow } from '@modules/number-match/components/ChipCard'
 import { CoinBadge } from '@modules/number-match/components/CoinBadge'
-import { ConfettiDots } from '@modules/number-match/components/ConfettiDots'
+import { FloatingNumbers } from '@modules/number-match/components/FloatingNumbers'
 import { GameLogo } from '@modules/number-match/components/GameLogo'
 import { HowToPlayModal } from '@modules/number-match/components/HowToPlayModal'
 import { Icon } from '@modules/number-match/components/Icon'
@@ -49,7 +49,7 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ConfettiDots theme={theme} />
+      <FloatingNumbers theme={theme} />
 
       <ScrollView
         contentContainerStyle={styles.content}

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { APP_VERSION } from '@modules/number-match/constants/storage'
 import { GAME_TAGLINE } from '@modules/number-match/constants/gameCopy'
-import { ConfettiDots } from '@modules/number-match/components/ConfettiDots'
+import { FloatingNumbers } from '@modules/number-match/components/FloatingNumbers'
 import { GameLogo } from '@modules/number-match/components/GameLogo'
 import { TileDotsLoader } from '@modules/number-match/components/TileDotsLoader'
 import { SPACING, TYPE } from '@modules/number-match/constants/tokens'
@@ -74,7 +74,7 @@ export function SplashScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ConfettiDots theme={theme} />
+      <FloatingNumbers theme={theme} />
 
       <View style={styles.content}>
         <GameLogo animated theme={theme} />

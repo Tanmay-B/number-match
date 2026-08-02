@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { BackHeader } from '@modules/number-match/components/BackHeader'
 import { BottomNav } from '@modules/number-match/components/BottomNav'
-import { ConfettiDots } from '@modules/number-match/components/ConfettiDots'
+import { FloatingNumbers } from '@modules/number-match/components/FloatingNumbers'
 import { Icon } from '@modules/number-match/components/Icon'
 import { ProgressRing } from '@modules/number-match/components/ProgressRing'
 import { Sparkline } from '@modules/number-match/components/Sparkline'
@@ -69,7 +69,7 @@ export function StatisticsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ConfettiDots opacity={0.6} theme={theme} />
+      <FloatingNumbers opacity={0.6} theme={theme} />
 
       <ScrollView
         contentContainerStyle={styles.content}

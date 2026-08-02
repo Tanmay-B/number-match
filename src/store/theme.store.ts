@@ -29,7 +29,7 @@ export const useThemeStore = create<ThemeStore>(set => ({
       // Fall through to system default
     }
 
-    set({ themeMode: null, isHydrated: true })
+    set({ themeMode: 'dark', isHydrated: true })
   },
 }))
 

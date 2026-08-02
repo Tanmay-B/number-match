@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { create } from 'zustand'
 import {
   DEFAULT_UNLOCKED_THEMES,
+  DEFAULT_VISUAL_THEME,
   STORAGE_KEYS,
   VISUAL_THEMES,
   type VisualThemeId,
@@ -21,7 +22,7 @@ function isVisualTheme(value: string): value is VisualThemeId {
 }
 
 export const useVisualThemeStore = create<VisualThemeStore>(set => ({
-  currentTheme: 'classic',
+  currentTheme: DEFAULT_VISUAL_THEME,
   unlockedThemes: DEFAULT_UNLOCKED_THEMES,
   isHydrated: false,
   setCurrentTheme: currentTheme => {
@@ -53,16 +54,16 @@ export const useVisualThemeStore = create<VisualThemeStore>(set => ({
       ])
 
       const currentTheme =
-        savedTheme && isVisualTheme(savedTheme) ? savedTheme : 'classic'
+        savedTheme && isVisualTheme(savedTheme) ? savedTheme : DEFAULT_VISUAL_THEME
 
-      let unlockedThemes = DEFAULT_UNLOCKED_THEMES
-      if (savedUnlocked) {
-        const parsed = JSON.parse(savedUnlocked) as string[]
-        unlockedThemes = parsed.filter(isVisualTheme)
-        if (unlockedThemes.length === 0) {
-          unlockedThemes = DEFAULT_UNLOCKED_THEMES
-        }
-      }
+      // Always union with the free themes: a theme that becomes free in a
+      // later release must unlock for players who installed before it did.
+      const saved = savedUnlocked
+        ? (JSON.parse(savedUnlocked) as string[]).filter(isVisualTheme)
+        : []
+      const unlockedThemes = Array.from(
+        new Set([...DEFAULT_UNLOCKED_THEMES, ...saved]),
+      )
 
       set({ currentTheme, unlockedThemes, isHydrated: true })
     } catch {

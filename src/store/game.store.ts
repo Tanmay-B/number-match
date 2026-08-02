@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { create } from 'zustand'
-import { COIN_REWARDS, STORAGE_KEYS } from '@modules/number-match/constants/storage'
+import { COIN_REWARDS, STARTING_COINS, STORAGE_KEYS } from '@modules/number-match/constants/storage'
 import type { GameState } from '@modules/number-match/engine/types'
 
 export type GameStatus = 'idle' | 'playing' | 'won' | 'lost'
 
 type GameStore = {
   coins: number
+  coinSpendTick: number
   game: GameState | null
   status: GameStatus
   isHydrated: boolean
@@ -21,6 +22,7 @@ type GameStore = {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   coins: 0,
+  coinSpendTick: 0,
   game: null,
   status: 'idle',
   isHydrated: false,
@@ -31,11 +33,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.getItem(STORAGE_KEYS.GAME),
       ])
 
-      const coins = coinsRaw ? Number(coinsRaw) : 0
+      const coins = coinsRaw ? Number(coinsRaw) : STARTING_COINS
       const game = gameRaw ? (JSON.parse(gameRaw) as GameState) : null
       const status: GameStatus = game ? 'playing' : 'idle'
+      const resolvedCoins = Number.isFinite(coins) ? coins : STARTING_COINS
 
-      set({ coins: Number.isFinite(coins) ? coins : 0, game, status, isHydrated: true })
+      if (!coinsRaw && resolvedCoins > 0) {
+        AsyncStorage.setItem(STORAGE_KEYS.COINS, String(resolvedCoins)).catch(() => {})
+      }
+
+      set({ coins: resolvedCoins, game, status, isHydrated: true })
     } catch {
       set({ isHydrated: true })
     }
@@ -59,7 +66,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const next = coins - amount
-    set({ coins: next })
+    set({ coins: next, coinSpendTick: get().coinSpendTick + 1 })
     AsyncStorage.setItem(STORAGE_KEYS.COINS, String(next)).catch(() => {})
     return true
   },

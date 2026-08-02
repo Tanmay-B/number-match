@@ -1,10 +1,17 @@
 import { useEffect } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import Animated, { FadeIn } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { APP_VERSION } from '@modules/number-match/constants/storage'
+import { GAME_TAGLINE } from '@modules/number-match/constants/gameCopy'
+import { ConfettiDots } from '@modules/number-match/components/ConfettiDots'
+import { GameLogo } from '@modules/number-match/components/GameLogo'
+import { TileDotsLoader } from '@modules/number-match/components/TileDotsLoader'
+import { SPACING, TYPE } from '@modules/number-match/constants/tokens'
 import { useAppTheme } from '@global/hooks/useAppTheme'
 import { useGameStore } from '@store/game.store'
+import { useAdRewardStore } from '@store/adReward.store'
 import { useSettingsStore } from '@store/settings.store'
 import { useStatsStore } from '@store/stats.store'
 import { useThemeStore } from '@store/theme.store'
@@ -13,9 +20,13 @@ import { AppRoutes, AppStackParams } from '@router/routes'
 
 type Props = NativeStackScreenProps<AppStackParams, AppRoutes.SPLASH>
 
+/** Minimum time on screen so the intro animation can play out. */
+const MIN_SPLASH_MS = 900
+
 export function SplashScreen({ navigation }: Props) {
   const { theme } = useAppTheme()
   const hydrateGameStore = useGameStore(state => state.hydrateGameStore)
+  const hydrateAdRewards = useAdRewardStore(state => state.hydrateAdRewards)
   const hydrateSettings = useSettingsStore(state => state.hydrateSettings)
   const hydrateStats = useStatsStore(state => state.hydrateStats)
   const hydrateTheme = useThemeStore(state => state.hydrateTheme)
@@ -27,17 +38,19 @@ export function SplashScreen({ navigation }: Props) {
     let cancelled = false
 
     async function bootstrap() {
+      // Run hydration and the minimum display time concurrently, so a fast
+      // device is not held back by more than the animation needs.
       await Promise.all([
         hydrateTheme(),
         hydrateSettings(),
         hydrateStats(),
         hydrateGameStore(),
+        hydrateAdRewards(),
         hydrateVisualThemes(),
+        new Promise<void>(resolve => {
+          setTimeout(resolve, MIN_SPLASH_MS)
+        }),
       ])
-
-      await new Promise<void>(resolve => {
-        setTimeout(resolve, 1200)
-      })
 
       if (!cancelled) {
         navigation.replace(AppRoutes.HOME)
@@ -50,6 +63,7 @@ export function SplashScreen({ navigation }: Props) {
       cancelled = true
     }
   }, [
+    hydrateAdRewards,
     hydrateGameStore,
     hydrateSettings,
     hydrateStats,
@@ -60,12 +74,18 @@ export function SplashScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <ConfettiDots theme={theme} />
+
       <View style={styles.content}>
-        <Text style={[styles.logo, { color: theme.text }]}>Number Match</Text>
-        <Text style={[styles.tagline, { color: theme.muted }]}>
-          Relax. Match. Repeat.
-        </Text>
-        <View style={[styles.loader, { borderColor: theme.border }]} />
+        <GameLogo animated theme={theme} />
+        <Animated.Text
+          entering={FadeIn.delay(420).duration(400)}
+          style={[styles.tagline, { color: theme.muted }]}>
+          {GAME_TAGLINE}
+        </Animated.Text>
+        <View style={styles.loader}>
+          <TileDotsLoader theme={theme} />
+        </View>
       </View>
       <Text style={[styles.version, { color: theme.muted }]}>v{APP_VERSION}</Text>
     </SafeAreaView>
@@ -76,32 +96,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: SPACING.xxl,
+    paddingVertical: SPACING.xxl,
   },
   content: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
   },
-  logo: {
-    fontSize: 36,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
   tagline: {
+    ...TYPE.body,
     fontSize: 16,
-    marginTop: 8,
+    marginTop: SPACING.md,
+    textAlign: 'center',
   },
   loader: {
-    borderRadius: 999,
-    borderWidth: 3,
-    height: 28,
-    marginTop: 28,
-    width: 28,
+    marginTop: SPACING.xxl,
   },
   version: {
-    fontSize: 12,
+    ...TYPE.caption,
     textAlign: 'center',
   },
 })

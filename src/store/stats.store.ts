@@ -11,6 +11,8 @@ type StatsStore = {
   hintsUsed: number
   adsWatched: number
   currentStreak: number
+  /** Scores of the most recent wins, oldest first. Drives the sparkline. */
+  recentScores: number[]
   isHydrated: boolean
   hydrateStats: () => Promise<void>
   recordGamePlayed: () => void
@@ -20,6 +22,7 @@ type StatsStore = {
   recordAdWatched: () => void
   recordSessionDuration: (durationMs: number) => void
   updateStreak: (streak: number) => void
+  resetStats: () => void
 }
 
 type PersistedStats = Omit<StatsStore, 'isHydrated' | keyof StatsActions>
@@ -33,6 +36,7 @@ type StatsActions = Pick<
   | 'recordAdWatched'
   | 'recordSessionDuration'
   | 'updateStreak'
+  | 'resetStats'
 >
 
 const defaultStats: PersistedStats = {
@@ -44,7 +48,10 @@ const defaultStats: PersistedStats = {
   hintsUsed: 0,
   adsWatched: 0,
   currentStreak: 0,
+  recentScores: [],
 }
+
+const RECENT_SCORES_LIMIT = 12
 
 export const useStatsStore = create<StatsStore>(set => ({
   ...defaultStats,
@@ -58,7 +65,12 @@ export const useStatsStore = create<StatsStore>(set => ({
       }
 
       const saved = JSON.parse(raw) as Partial<PersistedStats>
-      set({ ...defaultStats, ...saved, isHydrated: true })
+      const recentScores = Array.isArray(saved.recentScores)
+        ? saved.recentScores.filter(
+            (score): score is number => typeof score === 'number',
+          )
+        : []
+      set({ ...defaultStats, ...saved, recentScores, isHydrated: true })
     } catch {
       set({ isHydrated: true })
     }
@@ -74,9 +86,19 @@ export const useStatsStore = create<StatsStore>(set => ({
     set(state => {
       const gamesWon = state.gamesWon + 1
       const bestScore = Math.max(state.bestScore, score)
-      persistStats({ ...state, gamesWon, bestScore })
-      return { gamesWon, bestScore }
+      const recentScores = [...state.recentScores, score].slice(
+        -RECENT_SCORES_LIMIT,
+      )
+      persistStats({ ...state, gamesWon, bestScore, recentScores })
+      return { gamesWon, bestScore, recentScores }
     })
+  },
+  resetStats: () => {
+    set({ ...defaultStats })
+    AsyncStorage.setItem(
+      STORAGE_KEYS.STATS,
+      JSON.stringify(defaultStats),
+    ).catch(() => {})
   },
   recordMove: () => {
     set(state => {
